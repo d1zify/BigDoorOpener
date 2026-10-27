@@ -67,6 +67,10 @@ public class BDOCommand extends EldoCommand {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (args.length > 0 && args[0].equalsIgnoreCase("personal")) {
+            return BigDoorsOpener.instance().personalDoors().command(sender,
+                    java.util.Arrays.copyOfRange(args, 1, args.length));
+        }
         if (!super.onCommand(sender, command, label, args)) {
             messageSender().sendError(sender, localizer().getMessage("error.invalidCommand"));
             return true;

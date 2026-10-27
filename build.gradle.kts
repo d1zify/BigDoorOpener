@@ -1,6 +1,6 @@
 plugins {
     id("org.cadixdev.licenser") version "0.6.1"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.gradleup.shadow") version "8.3.6"
     java
     `maven-publish`
     `java-library`
@@ -8,13 +8,14 @@ plugins {
 }
 
 group = "de.eldoria"
-version = "2.5.3"
+version = "2.6.0"
 var mainPackage = "bigdoorsopener"
 val shadebade = group as String? + "." + mainPackage + "."
 val name = "BigDoorsOpener"
 description = "Open and close doors automatically on certain conditions"
 
 repositories {
+    maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://eldonexus.de/repository/maven-public/")
     maven("https://eldonexus.de/repository/maven-proxies/")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
@@ -25,7 +26,7 @@ dependencies {
     implementation("de.eldoria", "eldo-util", "1.14.5")
     implementation("net.kyori", "adventure-api", "4.17.0")
     implementation("net.kyori", "adventure-platform-bukkit", "4.3.4")
-    compileOnly("org.spigotmc", "spigot-api", "1.13.2-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper", "paper-api", "1.21.8-R0.1-SNAPSHOT")
     compileOnly("org.jetbrains", "annotations", "24.1.0")
     compileOnly("com.sk89q.worldguard", "worldguard-bukkit", "7.0.9") {
         exclude("org.spigotmc", "spigot-api")
@@ -36,6 +37,7 @@ dependencies {
     compileOnly("nl.pim16aap2", "BigDoors", "0.1.8.46")
     compileOnly("io.lumine", "Mythic-Dist", "5.6.2")
     testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.11.0")
+    testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", "5.11.0")
 }
 
 license {
@@ -52,7 +54,7 @@ java {
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    options.release.set(17)
+    options.release.set(21)
 }
 
 publishData {
@@ -109,14 +111,14 @@ tasks {
     }
 
     test {
-        useJUnit()
+        useJUnitPlatform()
         testLogging {
             events("passed", "skipped", "failed")
         }
     }
 
     register<Copy>("copyToServer") {
-        val path = project.property("targetDir") ?: ""
+        val path = project.findProperty("targetDir") ?: ""
         if (path.toString().isEmpty()) {
             println("targetDir is not set in gradle properties")
             return@register

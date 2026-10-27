@@ -126,6 +126,13 @@ public class DoorChecker extends BigDoorsAdapter implements Runnable, Listener {
         ConditionalDoor door = doors.poll();
         assert door != null : "Door is null. How could this happen?";
 
+        // Personal gates own their visual and collision state, never toggle the shared door.
+        if (BigDoorsOpener.instance().personalDoors() != null
+                && BigDoorsOpener.instance().personalDoors().manages(door.doorUID())) {
+            doors.add(door);
+            return;
+        }
+
         if (!doorExists(door)) {
             config.removeDoor(door.doorUID());
             BigDoorsOpener.logger().info("Door with id " + door.doorUID() + " has been deleted. Removing.");

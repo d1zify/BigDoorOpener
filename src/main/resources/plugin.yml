@@ -4,7 +4,7 @@ author: Hadde
 version: ${version}
 main: de.eldoria.bigdoorsopener.core.BigDoorsOpener
 website: www.spigotmc.org/resources/80805/
-api-version: 1.13
+api-version: '1.21'
 depend:
   - BigDoors
 softdepend:
@@ -19,3 +19,8 @@ commands:
     usage: "setTimed <...> | setClosed <...> | setRange <...> | invertOpen <...> | requiresPermission <...> | unregister <...> | info <...> | list | reload | about"
     aliases:
       - bdo
+
+permissions:
+  bdo.command.personal:
+    description: Configura portas individuais por permissão ou jogador.
+    default: op

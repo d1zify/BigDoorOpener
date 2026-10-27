@@ -84,6 +84,7 @@ public class BigDoorsOpener extends EldoPlugin {
     private Commander commander;
     // scheduler
     private DoorChecker doorChecker;
+    private de.eldoria.bigdoorsopener.personal.PersonalDoorService personalDoors;
     // listener
     private WeatherListener weatherListener;
     private RegisterInteraction registerInteraction;
@@ -167,6 +168,8 @@ public class BigDoorsOpener extends EldoPlugin {
 
 
         MessageSender.create(instance, "§6[BDO]");
+
+        personalDoors = new de.eldoria.bigdoorsopener.personal.PersonalDoorService(this);
 
         // start door checker
         doorChecker = DoorChecker.start(this, config, doors);
@@ -357,5 +360,14 @@ public class BigDoorsOpener extends EldoPlugin {
     public void reload() {
         config.reloadConfig();
         doorChecker.reload();
+    }
+
+    public de.eldoria.bigdoorsopener.personal.PersonalDoorService personalDoors() {
+        return personalDoors;
+    }
+
+    @Override
+    public void onPluginDisable() {
+        if (personalDoors != null) personalDoors.close();
     }
 }
