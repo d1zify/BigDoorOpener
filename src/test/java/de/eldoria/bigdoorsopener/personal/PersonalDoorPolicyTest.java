@@ -19,6 +19,16 @@ class PersonalDoorPolicyTest {
         assertTrue(rule.allows(friend, p -> p.equals("kingdom.door.test")));
         assertFalse(rule.allows(other, p -> false));
     }
+    @Test void questPermissionChangesAccessWithoutReplacingRule() {
+        DoorAccessRule rule = new DoorAccessRule("kingdom.quest.boss", Set.of());
+        java.util.Set<String> granted = new java.util.HashSet<>();
+        assertFalse(rule.allows(friend, granted::contains));
+        granted.add("kingdom.quest.boss");
+        assertTrue(rule.allows(friend, granted::contains));
+        assertFalse(rule.allows(other, permission -> false));
+        granted.clear();
+        assertFalse(rule.allows(friend, granted::contains));
+    }
     @Test void explicitPlayerDoesNotAdmitFriend() {
         DoorAccessRule rule = new DoorAccessRule("", Set.of(friend));
         assertTrue(rule.allows(friend, p -> false));

@@ -78,7 +78,6 @@ public final class PersonalDoorService implements Listener, AutoCloseable {
                 Set<UUID> players = new HashSet<>();
                 for (String player : section.getStringList("players")) players.add(UUID.fromString(player));
                 Gate gate = new Gate(id, world, blocks, new DoorAccessRule(section.getString("permission", ""), players));
-                gate.range = Math.max(1, Math.min(16, section.getDouble("open-distance", 5)));
                 gates.put(id, gate);
             }
         } catch (Exception error) {
@@ -97,7 +96,6 @@ public final class PersonalDoorService implements Listener, AutoCloseable {
             yaml.set(path + ".world", gate.worldId.toString());
             yaml.set(path + ".permission", gate.rule.permission());
             yaml.set(path + ".players", gate.rule.players().stream().map(UUID::toString).sorted().toList());
-            yaml.set(path + ".open-distance", gate.range);
             yaml.set(path + ".blocks", gate.blocks.stream().map(DoorVoxel::encode).toList());
         }
         File temp = new File(file.getParentFile(), file.getName() + ".tmp");
@@ -205,7 +203,7 @@ public final class PersonalDoorService implements Listener, AutoCloseable {
             World world = gate.world();
             Set<UUID> seen = new HashSet<>();
             for (Player player : world.getPlayers()) {
-                if (gate.distanceSquared(player.getLocation()) > 48 * 48) continue;
+                if (!gate.sentTo(player)) continue;
                 seen.add(player.getUniqueId());
                 Session session = gate.sessions.get(player.getUniqueId());
                 if (session == null) {
@@ -331,7 +329,6 @@ public final class PersonalDoorService implements Listener, AutoCloseable {
         final Map<DoorVoxel,BlockData> data=new HashMap<>();
         final int minX,minY,minZ,maxX,maxY,maxZ;
         DoorAccessRule rule;
-        double range=5;
         boolean conflict;
         boolean available=true, locked;
         Gate(long id,UUID world,List<DoorVoxel> blocks,DoorAccessRule rule) {
@@ -344,10 +341,12 @@ public final class PersonalDoorService implements Listener, AutoCloseable {
         }
         World world(){return Bukkit.getWorld(worldId);}
         boolean loaded(){World world=world();return world!=null && blocks.stream().allMatch(b->world.isChunkLoaded(b.x()>>4,b.z()>>4));}
-        double distanceSquared(Location at){double dx=Math.max(Math.max(minX-at.getX(),0),at.getX()-maxX),dy=Math.max(Math.max(minY-at.getY(),0),at.getY()-maxY),dz=Math.max(Math.max(minZ-at.getZ(),0),at.getZ()-maxZ);return dx*dx+dy*dy+dz*dz;}
+        boolean sentTo(Player player){
+            return blocks.stream().anyMatch(b->player.isChunkSent(((long)(b.x()>>4)&0xffffffffL)|((long)(b.z()>>4)<<32)));
+        }
         boolean mayPass(Player player){
             return !conflict && available && !locked && player.getWorld()==world()
-                    && distanceSquared(player.getLocation())<=range*range && rule.allows(player.getUniqueId(),player::hasPermission);
+                    && rule.allows(player.getUniqueId(),player::hasPermission);
         }
         void refreshDoor(){
             Door door=BigDoorsOpener.getBigDoors().getCommander().getDoor(null,id);
