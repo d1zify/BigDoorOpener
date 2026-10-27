@@ -12,6 +12,17 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PersonalDoorPolicyTest {
+    @Test void downwardAnimationMirrorsUpwardAndClosesAtOrigin() {
+        for (int step = 0; step <= 20; step++) {
+            assertEquals(-DoorDirection.UP.offset(4, step), DoorDirection.DOWN.offset(4, step), .0001f);
+        }
+        assertEquals(0f, DoorDirection.DOWN.offset(4, 0));
+        assertEquals(-5f, DoorDirection.DOWN.offset(4, 20));
+        assertEquals(DoorDirection.DOWN, DoorDirection.parse("baixo"));
+        assertEquals(DoorDirection.DOWN, DoorDirection.parse("DOWN"));
+        assertEquals(DoorDirection.UP, DoorDirection.parse("cima"));
+        assertThrows(IllegalArgumentException.class, () -> DoorDirection.parse("left"));
+    }
     private final UUID friend = UUID.randomUUID(), other = UUID.randomUUID();
     private final DoorVoxel wall = new DoorVoxel(0, 64, 0, true, "minecraft:oak_planks");
     @Test void permissionIsIndividual() {

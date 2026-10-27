@@ -78,6 +78,7 @@ public final class PersonalDoorService implements Listener, AutoCloseable {
                 Set<UUID> players = new HashSet<>();
                 for (String player : section.getStringList("players")) players.add(UUID.fromString(player));
                 Gate gate = new Gate(id, world, blocks, new DoorAccessRule(section.getString("permission", ""), players));
+                gate.direction = DoorDirection.parse(section.getString("direction", "up"));
                 gates.put(id, gate);
             }
         } catch (Exception error) {
@@ -95,6 +96,7 @@ public final class PersonalDoorService implements Listener, AutoCloseable {
             String path = "doors." + gate.id;
             yaml.set(path + ".world", gate.worldId.toString());
             yaml.set(path + ".permission", gate.rule.permission());
+            yaml.set(path + ".direction", gate.direction.name().toLowerCase(Locale.ROOT));
             yaml.set(path + ".players", gate.rule.players().stream().map(UUID::toString).sorted().toList());
             yaml.set(path + ".blocks", gate.blocks.stream().map(DoorVoxel::encode).toList());
         }
@@ -115,7 +117,21 @@ public final class PersonalDoorService implements Listener, AutoCloseable {
             if (action.equals("info")) {
                 Gate gate = gates.get(id);
                 sender.sendMessage(gate == null ? "§ePorta no modo global." : "§aPorta individual " + id + ": permissão=" + gate.rule.permission()
+                        + ", direção=" + (gate.direction == DoorDirection.UP ? "cima" : "baixo")
                         + ", jogadores=" + gate.rule.players().size() + ", blocos=" + gate.blocks.size() + ", espectadores=" + gate.sessions.size());
+                return true;
+            }
+            if (action.equals("direction") || action.equals("direcao")) {
+                if (args.length != 3) { usage(sender); return true; }
+                Gate gate = gates.get(id);
+                if (gate == null) throw new IllegalArgumentException("Ative o modo individual desta porta primeiro.");
+                DoorDirection next = DoorDirection.parse(args[2]);
+                DoorDirection previous = gate.direction;
+                gate.direction = next;
+                try { save(); } catch (IOException error) { gate.direction = previous; throw error; }
+                // Retain each viewer's animation progress, changing only its direction.
+                for (Session session : gate.sessions.values()) gate.positionDisplays(session);
+                sender.sendMessage("§aDireção salva: " + (next == DoorDirection.UP ? "para cima." : "para baixo."));
                 return true;
             }
             if (action.equals("off")) {
@@ -188,6 +204,7 @@ public final class PersonalDoorService implements Listener, AutoCloseable {
     private void usage(CommandSender sender) {
         sender.sendMessage("§e/bdo personal <id> permission <permissão>");
         sender.sendMessage("§e/bdo personal <id> player <jogador|UUID>");
+        sender.sendMessage("§e/bdo personal <id> direction <cima|baixo>");
         sender.sendMessage("§e/bdo personal <id> info|off");
     }
 
@@ -329,6 +346,7 @@ public final class PersonalDoorService implements Listener, AutoCloseable {
         final Map<DoorVoxel,BlockData> data=new HashMap<>();
         final int minX,minY,minZ,maxX,maxY,maxZ;
         DoorAccessRule rule;
+        DoorDirection direction=DoorDirection.UP;
         boolean conflict;
         boolean available=true, locked;
         Gate(long id,UUID world,List<DoorVoxel> blocks,DoorAccessRule rule) {
@@ -392,7 +410,7 @@ public final class PersonalDoorService implements Listener, AutoCloseable {
                     e.setPersistent(false);e.setVisibleByDefault(false);e.setBlock(data.get(b));
                     e.getPersistentDataContainer().set(marker,PersistentDataType.LONG,id);
                     e.setInterpolationDuration(1);e.setTeleportDuration(1);e.setViewRange(1);
-                    e.setTransformation(new Transformation(new Vector3f(0,(float)((maxY-minY+1)*session.step/20.0),0),new Quaternionf(),new Vector3f(1),new Quaternionf()));
+                    e.setTransformation(new Transformation(new Vector3f(0,direction.offset(maxY-minY,session.step),0),new Quaternionf(),new Vector3f(1),new Quaternionf()));
                 });
                 session.player.showEntity(plugin,display);session.displays.add(display);
             }
@@ -400,8 +418,11 @@ public final class PersonalDoorService implements Listener, AutoCloseable {
         }
         void animate(Session session){
             session.step=Math.max(0,Math.min(20,session.step+(session.open?1:-1)));
+            positionDisplays(session);
+        }
+        void positionDisplays(Session session){
             for(BlockDisplay display:session.displays){display.setInterpolationDelay(0);display.setTransformation(new Transformation(
-                    new Vector3f(0,(float)((maxY-minY+1)*session.step/20.0),0),new Quaternionf(),new Vector3f(1),new Quaternionf()));}
+                    new Vector3f(0,direction.offset(maxY-minY,session.step),0),new Quaternionf(),new Vector3f(1),new Quaternionf()));}
         }
         void dropSessions(){for(Session session:sessions.values())session.destroy();sessions.clear();}
         void restore(){

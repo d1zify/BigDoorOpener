@@ -12,26 +12,27 @@ The latest stable release can be found on [spigot](https://www.spigotmc.org/reso
 ## KINGDOM Paper 1.21.8 build
 
 This fork provides the BigDoorsOpener JAR used with Paper 1.21.8 and Java 21.
-The 2.6.1 build requires Paper 1.21.8 and Java 21. Existing global doors keep
+The 2.6.2 build requires Paper 1.21.8 and Java 21. Existing global doors keep
 their original behavior; individual doors are enabled explicitly.
 
 Install these plugins in the server's `plugins/` directory, then restart:
 
 1. [BigDoors 0.1.8.70](https://github.com/PimvanderLoos/BigDoors/releases/tag/0.1.8.70) by Pim van der Loos (GPL-3.0).
 2. [BigDoorsPhysics 2.4.4](https://modrinth.com/plugin/bigdoorsphysics) by bonn2 (AGPL-3.0).
-3. BigDoorsOpener 2.6.1, built with `gradlew build` (AGPL-3.0).
+3. BigDoorsOpener 2.6.2, built with `gradlew build` (AGPL-3.0).
 
 If you use JavaScript conditions in BigDoorsOpener, install a NashornJS script
 engine as well. The three plugins above were verified to enable together in a
 local Paper test server; door behavior must still be checked in game.
 
-## Portas individuais (2.6.1)
+## Portas individuais (2.6.2)
 
 Um administrador com `bdo.command.personal` pode configurar uma porta existente:
 
 ```text
 /bdo personal <id> permission kingdom.porta.exemplo
 /bdo personal <id> player Pepo_Kingdom
+/bdo personal <id> direction baixo
 /bdo personal <id> info
 /bdo personal <id> off
 ```
@@ -40,6 +41,12 @@ Escolha **um** modo de acesso: permissão ou jogador. Um comando substitui a
 regra anterior, não acrescenta outro jogador. O nome deve ser de uma conta já
 conhecida pelo servidor; também é possível informar seu UUID. Não há bypass
 automático de OP para uma lista nominal. Permissões seguem o provedor instalado.
+
+Desde 2.6.2, `direction baixo` faz a porta descer; `direction cima` restaura a
+elevação. Aceita também `down/up` e `direcao`. A direção é salva por porta e
+permanece após reinício; registros antigos continuam para cima. Não muda a
+permissão nem a colisão. Se já estiver aberta, o comando reposiciona o visual;
+para assistir à descida completa, retire e conceda novamente a permissão de teste.
 
 A porta deve estar fechada, parada e com seus chunks carregados. Nenhuma porta
 é convertida automaticamente. Assim que a permissão concedida pela quest fica
@@ -83,7 +90,7 @@ administrativo do BigDoors continua sendo respeitado.
 
 ### Validação obrigatória no jogo
 
-O build inclui oito testes automatizados de acesso, snapshot e colisão. Eles não
+O build inclui nove testes automatizados de acesso, snapshot, direção e colisão. Eles não
 comprovam a renderização no cliente. Antes de usar em área pública:
 
 1. Testar simultaneamente com dois jogadores sem OP, somente um autorizado.
@@ -94,5 +101,5 @@ comprovam a renderização no cliente. Antes de usar em área pública:
 
 Não use reload geral ou hot-load para instalar o JAR. O operador deve reiniciar
 o servidor pelo painel após salvar backup do JAR, configuração, snapshot e banco
-do BigDoors. Instale somente `build/libs/BigDoorsOpener-2.6.1-all.jar`, sem manter
+do BigDoors. Instale somente `build/libs/BigDoorsOpener-2.6.2-all.jar`, sem manter
 duas versões do addon em `plugins/`.
