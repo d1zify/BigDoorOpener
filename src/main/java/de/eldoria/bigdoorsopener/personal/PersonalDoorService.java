@@ -224,9 +224,14 @@ public final class PersonalDoorService implements Listener, AutoCloseable {
                 seen.add(player.getUniqueId());
                 Session session = gate.sessions.get(player.getUniqueId());
                 if (session == null) {
-                    if (count >= MAX_SESSIONS) { gate.mask(player, false); continue; }
+                    if (count >= MAX_SESSIONS) { gate.mask(player, gate.mayPass(player)); continue; }
                     session = new Session(player);
                     gate.sessions.put(player.getUniqueId(), session); count++;
+                    // Existing access is already open on arrival/reconnect; only a new grant animates.
+                    if (gate.mayPass(player)) {
+                        session.step = 20;
+                        gate.transition(session, true);
+                    }
                 }
                 boolean open = gate.mayPass(player);
                 if (open != session.open) gate.transition(session, open);
@@ -243,7 +248,11 @@ public final class PersonalDoorService implements Listener, AutoCloseable {
             Iterator<Map.Entry<UUID, Session>> iterator = gate.sessions.entrySet().iterator();
             while (iterator.hasNext()) {
                 Map.Entry<UUID, Session> entry = iterator.next();
-                if (!seen.contains(entry.getKey())) { gate.mask(entry.getValue().player, false); entry.getValue().destroy(); iterator.remove(); count--; }
+                if (!seen.contains(entry.getKey())) {
+                    Player viewer = entry.getValue().player;
+                    gate.mask(viewer, gate.mayPass(viewer));
+                    entry.getValue().destroy(); iterator.remove(); count--;
+                }
             }
         }
         Iterator<Map.Entry<UUID, Location>> iterator = projectiles.entrySet().iterator();
@@ -313,7 +322,8 @@ public final class PersonalDoorService implements Listener, AutoCloseable {
             for (Gate gate:gates.values()) if(gate.world()==event.getPlayer().getWorld()
                     && gate.blocks.stream().anyMatch(b -> b.x() >> 4 == event.getChunk().getX() && b.z() >> 4 == event.getChunk().getZ())) {
                 Session session=gate.sessions.get(event.getPlayer().getUniqueId());
-                gate.mask(event.getPlayer(),session!=null && (session.open || !session.displays.isEmpty()));
+                gate.mask(event.getPlayer(),gate.mayPass(event.getPlayer())
+                        || (session!=null && !session.displays.isEmpty()));
             }
         },1);
     }

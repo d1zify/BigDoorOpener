@@ -12,20 +12,20 @@ The latest stable release can be found on [spigot](https://www.spigotmc.org/reso
 ## KINGDOM Paper 1.21.8 build
 
 This fork provides the BigDoorsOpener JAR used with Paper 1.21.8 and Java 21.
-The 2.6.2 build requires Paper 1.21.8 and Java 21. Existing global doors keep
+The 2.6.3 build requires Paper 1.21.8 and Java 21. Existing global doors keep
 their original behavior; individual doors are enabled explicitly.
 
 Install these plugins in the server's `plugins/` directory, then restart:
 
 1. [BigDoors 0.1.8.70](https://github.com/PimvanderLoos/BigDoors/releases/tag/0.1.8.70) by Pim van der Loos (GPL-3.0).
 2. [BigDoorsPhysics 2.4.4](https://modrinth.com/plugin/bigdoorsphysics) by bonn2 (AGPL-3.0).
-3. BigDoorsOpener 2.6.2, built with `gradlew build` (AGPL-3.0).
+3. BigDoorsOpener 2.6.3, built with `gradlew build` (AGPL-3.0).
 
 If you use JavaScript conditions in BigDoorsOpener, install a NashornJS script
 engine as well. The three plugins above were verified to enable together in a
 local Paper test server; door behavior must still be checked in game.
 
-## Portas individuais (2.6.2)
+## Portas individuais (2.6.3)
 
 Um administrador com `bdo.command.personal` pode configurar uma porta existente:
 
@@ -61,8 +61,11 @@ da cutscene: não precisa de comando adicional para abrir. A elevação dura 20 
 (cerca de 1 segundo a 20 TPS). Remover a permissão fecha a porta só para o jogador.
 A animação só pode ser vista com o mundo e os chunks da porta carregados e enviados
 ao cliente. Não há carregamento forçado nem limite adicional de 5 ou 48 blocos.
-Se a permissão já existia ao chegar, a porta será apresentada como autorizada;
-essa checagem não mantém um histórico de conclusão ou da cutscene.
+Se a permissão já existia ao chegar ou reconectar, a porta já será apresentada
+aberta, sem repetir a animação. Afastar-se não revoga nem fecha o acesso; ele
+permanece enquanto a permissão for efetiva. Essa checagem não mantém um histórico
+de conclusão ou da cutscene. Use uma permissão permanente, não temporária, para
+desbloqueios permanentes de quest.
 
 No modo individual, as condições antigas de horário, itens e outras avaliações
 não são executadas. Elas permanecem salvas e voltam a valer com `off`. O bloqueio
@@ -101,5 +104,5 @@ comprovam a renderização no cliente. Antes de usar em área pública:
 
 Não use reload geral ou hot-load para instalar o JAR. O operador deve reiniciar
 o servidor pelo painel após salvar backup do JAR, configuração, snapshot e banco
-do BigDoors. Instale somente `build/libs/BigDoorsOpener-2.6.2-all.jar`, sem manter
+do BigDoors. Instale somente `build/libs/BigDoorsOpener-2.6.3-all.jar`, sem manter
 duas versões do addon em `plugins/`.
